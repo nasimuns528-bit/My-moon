@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Web Application Scanner – Black & Gold</title>
+  <style>
+    :root{
+      --bg:#020617;
+      --accent:#facc15;
+      --accent-strong:#fbbf24;
+      --accent-soft:rgba(250,204,21,0.16);
+      --text:#f9fafb;
+      --muted:#9ca3af;
+      --border:#1f2937;
+      --danger:#fb7185;
+      --warning:#f97316;
+      --safe:#22c55e;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top,#facc15 0,#020617 45%,transparent 70%),
+        radial-gradient(circle at bottom right,#f97316 0,#020617 50%,transparent 80%),
+        #020617;
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+
+    .app{
+      width:min(1100px,100%);
+    }
+
+    .shell{
+      background:linear-gradient(135deg,rgba(15,23,42,0.94),rgba(15,23,42,0.99));
+      border-radius:26px;
+      border:1px solid rgba(250,204,21,0.35);
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+      overflow:hidden;
+      backdrop-filter:blur(26px);
+    }
+
+    .accent-strip{
+      height:3px;
+      background:linear-gradient(90deg,#facc15,#f97316,#facc15);
+    }
+
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      padding:14px 18px 10px;
+      border-bottom:1px solid rgba(55,65,81,0.85);
+      background:radial-gradient(circle at top,#020617,#020617 60%);
+    }
+
+    .brand{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .brand-icon{
+      width:44px;height:44px;
+      border-radius:18px;
+      display:grid;place-items:center;
+      background:radial-gradient(circle at top,#facc15,#0f172a);
+      box-shadow:0 18px 40px rgba(250,204,21,0.7);
+      font-size:1.3rem;
+    }
+    .brand-title{
+      font-weight:700;
+      letter-spacing:.08em;
+      font-size:.9rem;
+    }
+    .brand-sub{
+      font-size:.78rem;
+      color:var(--muted);
+    }
+
+    .header-text h1{
+      font-size:1.6rem;
+      margin-bottom:2px;
+    }
+    .header-text p{
+      font-size:.84rem;
+      color:var(--muted);
+      max-width:42ch;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 9px;
+      border-radius:999px;
+      background:rgba(250,204,21,0.14);
+      color:#fde68a;
+      font-size:.75rem;
+    }
+
+    .main{
+      padding:14px 16px 16px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+      gap:12px;
+    }
+    @media (max-width:800px){
+      .grid-2{
+        grid-template-columns:1fr;
+      }
+      header{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+    }
+
+    .card{
+      background:rgba(15,23,42,0.9);
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,0.75);
+      box-shadow:0 18px 40px rgba(0,0,0,0.85);
+      padding:14px 16px 14px;
+      backdrop-filter:blur(22px);
+    }
+    .card h2{
+      font-size:1rem;
+      margin-bottom:4px;
+    }
+    .card p.small{
+      font-size:.8rem;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    label{
+      display:block;
+      font-size:.8rem;
+      margin-bottom:4px;
+    }
+
+    input{
+      width:100%;
+      border-radius:999px;
+      border:1px solid var(--border);
+      padding:9px 11px;
+      font-size:.86rem;
+      font-family:inherit;
+      color:var(--text);
+      background:rgba(15,23,42,0.96);
+      box-shadow:inset 0 0 0 1px rgba(15,23,42,0.7);
+    }
+    input::placeholder{
+      color:#6b7280;
+    }
+    input:focus{
+      outline:2px solid var(--accent);
+      outline-offset:1px;
+      border-color:transparent;
+      background:#020617;
+      box-shadow:0 0 0 1px rgba(250,204,21,0.6);
+    }
+
+    .field-group{
+      margin-bottom:8px;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:4px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:8px 16px;
+      font-size:.85rem;
+      font-weight:600;
+      cursor:pointer;
+      background:linear-gradient(135deg,#facc15,#f97316);
+      color:#020617;
+      box-shadow:
+        0 18px 40px rgba(250,204,21,0.7),
+        0 0 0 1px rgba(0,0,0,0.7);
+      backdrop-filter:blur(18px);
+    }
+    .btn.secondary{
+      background:rgba(15,23,42,0.95);
+      color:var(--muted);
+      box-shadow:
+        0 10px 24px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(148,163,184,0.7);
+    }
+    .btn:focus-visible{
+      outline:2px solid var(--accent);
+      outline-offset:2px;
+    }
+
+    .text-muted{
+      font-size:.78rem;
+      color:var(--muted);
+    }
+
+    .shadow-block{
+      margin-top:8px;
+      border-radius:14px;
+      padding:8px 10px;
+      background:linear-gradient(135deg,rgba(250,204,21,0.055),rgba(15,23,42,0.98));
+      border:1px solid rgba(148,163,184,0.7);
+      box-shadow:0 20px 40px rgba(0,0,0,0.85);
+    }
+
+    .list{
+      list-style:none;
+      padding-left:0;
+      font-size:.8rem;
+      color:var(--muted);
+      margin-top:4px;
+    }
+    .list li{
+      margin-bottom:4px;
+      display:flex;
+      gap:6px;
+      align-items:flex-start;
+    }
+    .bullet{
+      font-size:.82rem;
+      color:var(--accent);
+      line-height:1.3;
+    }
+
+    .status-good{color:var(--safe);}
+    .status-warn{color:var(--warning);}
+    .status-bad{color:var(--danger);}
+
+    /* Premium Scanner UX Styling Extensions */
+    .tab-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 999px;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(250,204,21,0.3);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .scan-loader {
+      display: none;
+      text-align: center;
+      padding: 24px 10px;
+    }
+    .loader-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(250, 204, 21, 0.12);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      animation: spin 0.8s linear infinite;
+    }
+    .loader-text {
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .input-invalid {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 2px rgba(251, 113, 133, 0.35) !important;
+    }
+    .validation-helper {
+      font-size: 0.72rem;
+      color: var(--danger);
+      margin-top: 5px;
+      padding-left: 8px;
+      display: none;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="shell">
+      <div class="accent-strip"></div>
+
+      <header>
+        <div class="brand">
+          <div class="brand-icon">🕵️‍♂️</div>
+          <div>
+            <div class="brand-title">WEB SCAN LITE</div>
+            <div class="brand-sub">Simple web application URL scanner</div>
+          </div>
+        </div>
+        <div class="header-text">
+          <h1>Take a quick look at any URL.</h1>
+          <p>
+            This educational scanner highlights basic details like HTTPS usage
+            and query parameters. It does not attack or send requests to sites.
+          </p>
+        </div>
+        <div>
+          <div class="badge">
+            <span>✨</span>
+            <span>Black & gold glass UI</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="main">
+        <div class="grid-2">
+          <!-- Left: input -->
+          <section class="card" aria-label="URL input">
+            <h2>🌐 Enter a URL</h2>
+            <p class="small">
+              Use only URLs you are allowed to analyze. This tool runs completely
+              in your browser and does not send network requests.
+            </p>
+
+            <div class="field-group">
+              <label for="url">Target URL</label>
+              <input
+                type="text"
+                id="url"
+                placeholder="https://example.com/app?user=1&id=42"
+              />
+              <div id="validationHelper" class="validation-helper">⚠️ Please enter a valid domain or URL structure.</div>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn" id="scanBtn">
+                🔍 Inspect URL
+              </button>
+              <button type="button" class="btn secondary" id="demoBtn">
+                🎯 Use demo URL
+              </button>
+            </div>
+
+            <p class="text-muted" style="margin-top:6px;">
+              Tip: try URLs with <code>?id=</code> or multiple parameters to see
+              more hints.
+            </p>
+          </section>
+
+          <!-- Right: results -->
+          <section class="card" aria-label="Results" style="display: flex; flex-direction: column; min-height: 290px;">
+            <h2>📎 URL insights</h2>
+            <p id="intro" class="small">
+              Enter a URL and click <strong>Inspect URL</strong> to see simple
+              hints about HTTPS, query parameters, and a few common patterns
+              used in lab exercises.
+            </p>
+
+            <!-- Loading Spinner Box -->
+            <div id="scanLoader" class="scan-loader">
+              <div class="loader-spinner"></div>
+              <div id="loaderText" class="loader-text">Analyzing URL structure...</div>
+            </div>
+
+            <div id="results" style="display:none; margin-top: 10px;">
+              <!-- Tabs Navigation -->
+              <div class="tab-row">
+                <button type="button" class="tab-btn active" id="btn-tab-overview" data-tab="tab-overview">🎯 Insights</button>
+                <button type="button" class="tab-btn" id="btn-tab-params" data-tab="tab-params">📎 Parameters</button>
+                <button type="button" class="tab-btn" id="btn-tab-guide" data-tab="tab-guide">💡 Lab Guide</button>
+              </div>
+
+              <!-- Tab Contents -->
+              <div id="tab-overview" class="tab-content active">
+                <div class="shadow-block">
+                  <p class="small"><strong>Connection & protocol</strong></p>
+                  <ul class="list" id="protoList"></ul>
+                </div>
+              </div>
+
+              <div id="tab-params" class="tab-content">
+                <div class="shadow-block">
+                  <p class="small"><strong>Parameters and structure</strong></p>
+                  <ul class="list" id="paramList"></ul>
+                </div>
+              </div>
+
+              <div id="tab-guide" class="tab-content">
+                <div class="shadow-block">
+                  <p class="small"><strong>Quick thoughts for a lab</strong></p>
+                  <ul class="list" id="labList"></ul>
+                </div>
+              </div>
+
+              <!-- Action Footer -->
+              <div class="btn-row" style="margin-top: 14px; justify-content: flex-end;">
+                <button type="button" class="btn secondary" id="copyReportBtn" style="font-size: 0.75rem; padding: 6px 12px;">
+                  📋 Copy JSON Report
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Grab elements after DOM is loaded (script is at end of body)
+    const urlInput = document.getElementById("url");
+    const scanBtn = document.getElementById("scanBtn");
+    const demoBtn = document.getElementById("demoBtn");
+
+    const intro = document.getElementById("intro");
+    const resultsBox = document.getElementById("results");
+    const protoList = document.getElementById("protoList");
+    const paramList = document.getElementById("paramList");
+    const labList = document.getElementById("labList");
+    
+    const validationHelper = document.getElementById("validationHelper");
+    const scanLoader = document.getElementById("scanLoader");
+    const loaderText = document.getElementById("loaderText");
+    const copyReportBtn = document.getElementById("copyReportBtn");
+
+    // Current parsed URL data for exporting
+    let currentScanReport = null;
+
+    // Safety checks in console so you can see if IDs mismatch
+    if (!urlInput || !scanBtn || !demoBtn) {
+      console.error("One or more elements (url, scanBtn, demoBtn) not found. Check IDs.");
+    }
+
+    // Helper to safely escape HTML entities preventing XSS
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Real-time URL Validation Interactivity
+    urlInput.addEventListener("input", () => {
+      const raw = urlInput.value.trim();
+      if (!raw) {
+        urlInput.classList.remove("input-invalid");
+        validationHelper.style.display = "none";
+        scanBtn.disabled = false;
+        return;
+      }
+
+      // Robust URL/domain pattern supporting ports, localhost, IP addresses and long TLDs
+      const urlPattern = /^(?:https?:\/\/)?(?:localhost|[\da-z.-]+\.[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})(?::\d+)?(?:\/[\w .-\/]*)*(?:\?[\w=&.-]*)?(?:#[\w-]*)?$/i;
+      const isValid = urlPattern.test(raw);
+
+      if (!isValid) {
+        urlInput.classList.add("input-invalid");
+        validationHelper.style.display = "block";
+        scanBtn.disabled = true;
+      } else {
+        urlInput.classList.remove("input-invalid");
+        validationHelper.style.display = "none";
+        scanBtn.disabled = false;
+      }
+    });
+
+    demoBtn.addEventListener("click", () => {
+      // Fill demo URL and run the same analysis as Inspect button
+      urlInput.value = "http://test.example.com/app/view?id=42&debug=true";
+      urlInput.classList.remove("input-invalid");
+      validationHelper.style.display = "none";
+      scanBtn.disabled = false;
+      analyzeUrl();
+    });
+
+    scanBtn.addEventListener("click", analyzeUrl);
+
+    // Tab Switching Interactivity
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tabId = btn.getAttribute("data-tab");
+        switchTab(tabId);
+      });
+    });
+
+    function switchTab(tabId) {
+      // Deactivate all tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      // Deactivate all content panes
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      // Activate active tab button and pane
+      const tabButton = document.querySelector(`[data-tab="${tabId}"]`);
+      if (tabButton) tabButton.classList.add('active');
+      
+      const tabContent = document.getElementById(tabId);
+      if (tabContent) tabContent.classList.add('active');
+    }
+
+    function analyzeUrl() {
+      const raw = (urlInput.value || "").trim();
+      if (!raw) {
+        resultsBox.style.display = "none";
+        scanLoader.style.display = "none";
+        intro.textContent =
+          "No URL provided yet. Type or paste a URL and click Inspect URL.";
+        return;
+      }
+
+      let parsed;
+      try {
+        parsed = new URL(raw);
+      } catch (e) {
+        // If missing scheme, try adding https://
+        try {
+          parsed = new URL("https://" + raw);
+        } catch (e2) {
+          resultsBox.style.display = "none";
+          scanLoader.style.display = "none";
+          intro.textContent =
+            "This does not look like a valid URL. Try including the domain (and https:// if needed).";
+          return;
+        }
+      }
+
+      // Hide results & intro and show animated scanner loader
+      resultsBox.style.display = "none";
+      intro.style.display = "none";
+      scanLoader.style.display = "block";
+
+      // Simulate a multi-step progressive scanner audit
+      loaderText.textContent = "Resolving URL DNS records...";
+      
+      setTimeout(() => {
+        loaderText.textContent = "Inspecting connection protocol security...";
+        
+        setTimeout(() => {
+          loaderText.textContent = "Analyzing query parameters and path structures...";
+          
+          setTimeout(() => {
+            // Complete simulated scan and display results
+            scanLoader.style.display = "none";
+            resultsBox.style.display = "block";
+            intro.style.display = "block";
+            intro.textContent = "These hints are for learning only. They do not prove a site is safe or unsafe.";
+            
+            // Render actual results
+            renderResults(parsed);
+          }, 400);
+        }, 400);
+      }, 400);
+    }
+
+    function renderResults(parsed) {
+      const protocol = parsed.protocol; // http: or https:
+      const host = parsed.host;
+      const path = parsed.pathname;
+      const search = parsed.search;
+
+      const params = new URLSearchParams(search);
+      const paramEntries = Array.from(params.entries());
+
+      // Reset to the first tab (Insights)
+      switchTab('tab-overview');
+
+      // Protocol / host / path
+      protoList.innerHTML = "";
+
+      const isHttps = protocol === "https:";
+
+      const protoItem = document.createElement("li");
+      protoItem.innerHTML = `
+        <span class="bullet">${isHttps ? "🟢" : "🟥"}</span>
+        <span class="${isHttps ? "status-good" : "status-bad"}">
+          ${isHttps ? "Uses HTTPS (encrypted)" : "Uses HTTP (not encrypted)"}
+        </span>
+      `;
+      protoList.appendChild(protoItem);
+
+      const hostItem = document.createElement("li");
+      hostItem.innerHTML = `
+        <span class="bullet">📡</span>
+        <span>Host: <strong>${escapeHtml(host)}</strong></span>
+      `;
+      protoList.appendChild(hostItem);
+
+      const pathItem = document.createElement("li");
+      pathItem.innerHTML = `
+        <span class="bullet">📂</span>
+        <span>Path: <strong>${escapeHtml(path || "/")}</strong></span>
+      `;
+      protoList.appendChild(pathItem);
+
+      // Parameters & structure
+      paramList.innerHTML = "";
+      if (!paramEntries.length) {
+        const li = document.createElement("li");
+        li.innerHTML =
+          '<span class="bullet">•</span><span>No query parameters detected in this URL.</span>';
+        paramList.appendChild(li);
+      } else {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="bullet">📎</span>
+          <span>This URL has <strong>${paramEntries.length}</strong> query parameter(s).</span>
+        `;
+        paramList.appendChild(li);
+
+        paramEntries.forEach(([key, value]) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span class="bullet">➤</span>
+            <span><strong>${escapeHtml(key)}</strong> = <code>${escapeHtml(value)}</code></span>
+          `;
+          paramList.appendChild(li);
+        });
+      }
+
+      // Lab hints – educational only
+      labList.innerHTML = "";
+      const hints = [];
+
+      if (params.has("id")) {
+        hints.push(
+          "Contains an <strong>id</strong> parameter. In labs, these are often used for access control or IDOR testing."
+        );
+      }
+      if (params.has("debug") || params.has("test")) {
+        hints.push(
+          "Has a <strong>debug/test</strong> flag. In real apps, such flags may reveal extra information."
+        );
+      }
+      if (/admin|login|config/i.test(path)) {
+        hints.push(
+          "Path includes words like <strong>admin/login/config</strong>. These are common targets in reconnaissance exercises."
+        );
+      }
+      if (!isHttps) {
+        hints.push(
+          "Because this example uses HTTP, traffic could be visible on the network in a lab environment."
+        );
+      }
+      if (!hints.length) {
+        hints.push(
+          "Nothing special stood out. In a real assessment, you would still review responses, inputs, and auth flows."
+        );
+      }
+
+      hints.forEach((text) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="bullet">💡</span><span>${text}</span>`;
+        labList.appendChild(li);
+      });
+
+      // Save for Copy JSON function
+      currentScanReport = {
+        scanTimestamp: new Date().toISOString(),
+        targetUrl: parsed.href,
+        protocol: protocol,
+        isHttps: isHttps,
+        host: host,
+        path: path,
+        parameters: Object.fromEntries(params),
+        hintsIdentified: hints.map(h => h.replace(/<\/?[^>]+(>|$)/g, "")) // Strip HTML tags
+      };
+    }
+
+    // Export Report Capability
+    copyReportBtn.addEventListener("click", () => {
+      if (!currentScanReport) return;
+      
+      const jsonString = JSON.stringify(currentScanReport, null, 2);
+      
+      const onSuccess = () => {
+        const originalText = copyReportBtn.innerHTML;
+        copyReportBtn.innerHTML = "✓ Copied!";
+        copyReportBtn.style.color = "var(--safe)";
+        
+        setTimeout(() => {
+          copyReportBtn.innerHTML = originalText;
+          copyReportBtn.style.color = "";
+        }, 1500);
+      };
+
+      const onError = (err) => {
+        console.error("Could not copy text: ", err);
+        alert("Failed to copy report. Please verify you are using a secure origin or try copying manually.");
+      };
+
+      // Check if navigator.clipboard is available (Secure Contexts)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(jsonString).then(onSuccess).catch(onError);
+      } else {
+        // Fallback for non-secure contexts (e.g. file:// protocol)
+        try {
+          const textArea = document.createElement("textarea");
+          textArea.value = jsonString;
+          textArea.style.top = "0";
+          textArea.style.left = "0";
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          const successful = document.execCommand("copy");
+          document.body.removeChild(textArea);
+          if (successful) {
+            onSuccess();
+          } else {
+            onError("execCommand copy returned false");
+          }
+        } catch (err) {
+          onError(err);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
