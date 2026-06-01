@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSec Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #212529;
+            --card-bg: #f8f9fa;
+            --primary: #0d6efd;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --success: #198754;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --card-bg: #1e1e1e;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .threat-count {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .radar-chart {
+            height: 300px;
+        }
+        #loginModal .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Simulation Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">CyberSec Dashboard Login</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control demo-username" placeholder="admin">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control demo-password" placeholder="password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="login()">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="bi bi-shield-check"></i> CyberSec Dashboard</a>
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-outline-light me-2" onclick="toggleTheme()">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i> Dark Mode
+                </button>
+                <span class="navbar-text me-3" id="userInfo" style="display:none;">Welcome, Admin!</span>
+                <button class="btn btn-outline-light" onclick="logout()" id="logoutBtn" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4" id="dashboard" style="display:none;">
+        <!-- Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:3rem;"></i>
+                        <div class="threat-count text-danger" id="highThreats">12</div>
+                        <div>High Threats</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-circle-fill text-warning" style="font-size:3rem;"></i>
+                        <div class="threat-count text-warning" id="mediumThreats">45</div>
+                        <div>Medium Threats</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-info-circle-fill text-info" style="font-size:3rem;"></i>
+                        <div class="threat-count text-info" id="lowThreats">128</div>
+                        <div>Low Threats</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-shield-fill-check text-success" style="font-size:3rem;"></i>
+                        <div class="threat-count text-success" id="resolved">89</div>
+                        <div>Resolved</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Threat Feeds -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6>Real-time Threat Feeds</h6>
+                        <small>Last updated: <span id="feedTime"></span></small>
+                    </div>
+                    <div class="card-body">
+                        <div id="threatFeed" class="threat-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Radar -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6>Risk Radar</h6>
+                    </div>
+                    <div class="card-body radar-chart">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Incident Timeline -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Incident Timeline</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="timelineChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vulnerability Scanner Mock Data -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Vulnerability Scanner</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="vulnList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6>Alerts Table</h6>
+                        <div>
+                            <select class="form-select form-select-sm me-2" id="severityFilter" onchange="filterAlerts()">
+                                <option value="">All Severities</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search alerts..." onkeyup="filterAlerts()">
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="alertsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Severity</th>
+                                        <th>Source IP</th>
+                                        <th>Threat</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Data
+        const mockAlerts = [
+            {timestamp: '2026-05-09 16:30', severity: 'High', source: '192.168.1.100', threat: 'SQL Injection Attempt', status: 'Active'},
+            {timestamp: '2026-05-09 16:20', severity: 'Medium', source: '10.0.0.50', threat: 'Brute Force Login', status: 'Investigating'},
+            {timestamp: '2026-05-09 16:15', severity: 'Low', source: '172.16.0.10', threat: 'Suspicious Scan', status: 'Resolved'},
+            {timestamp: '2026-05-09 16:10', severity: 'High', source: '203.0.113.5', threat: 'Ransomware Payload', status: 'Active'},
+            {timestamp: '2026-05-09 16:05', severity: 'Medium', source: '198.51.100.20', threat: 'Phishing Link', status: 'Blocked'},
+            {timestamp: '2026-05-09 16:00', severity: 'High', source: '192.168.1.200', threat: 'DDoS Attack', status: 'Mitigated'},
+        ];
+
+        const mockVulns = [
+            {id: 'CVE-2026-1234', severity: 'Critical', description: 'Buffer Overflow in Web Server', affected: 'Apache 2.4.x'},
+            {id: 'CVE-2026-5678', severity: 'High', description: 'XSS Vulnerability', affected: 'Custom JS Library'},
+            {id: 'CVE-2026-9012', severity: 'Medium', description: 'Weak Encryption', affected: 'SSL Config'},
+        ];
+
+        const mockThreats = ['malicious.exe', 'phish-site.com', 'ransom_note.txt', 'port_scan.sh', 'trojan_payload.bin'];
+
+        // Radar Chart Data
+        const radarData = {
+            labels: ['Network', 'Application', 'Data', 'Infrastructure', 'Compliance'],
+            datasets: [{
+                label: 'Risk Score',
+                data: [85, 70, 45, 90, 60],
+                backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 2
+            }]
+        };
+
+        // Bootstrap Class Mappings for Severities and Statuses
+        const bootstrapColorMap = {
+            'critical': 'danger',
+            'high': 'danger',
+            'medium': 'warning',
+            'low': 'info',
+            'active': 'danger',
+            'investigating': 'warning',
+            'resolved': 'success',
+            'blocked': 'dark',
+            'mitigated': 'success'
+        };
+
+        function getBootstrapClass(value) {
+            const val = (value || '').toLowerCase();
+            return bootstrapColorMap[val] || 'secondary';
+        }
+
+        // Safe HTML Escaping Utility
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Chart Theme Configs for Dark/Light adaptations
+        const chartThemeConfig = {
+            dark: {
+                textColor: '#ffffff',
+                gridColor: 'rgba(255, 255, 255, 0.1)',
+                angleLinesColor: 'rgba(255, 255, 255, 0.15)'
+            },
+            light: {
+                textColor: '#212529',
+                gridColor: 'rgba(0, 0, 0, 0.1)',
+                angleLinesColor: 'rgba(0, 0, 0, 0.1)'
+            }
+        };
+
+        let radarCtx, timelineCtx;
+        let radarChartInstance, timelineChartInstance;
+
+        // Initialize
+        function init() {
+            // Check session login state first to prevent page-reload auth loss
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+
+            // Setup Charts
+            radarCtx = document.getElementById('radarChart').getContext('2d');
+            radarChartInstance = new Chart(radarCtx, {
+                type: 'radar',
+                data: radarData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    }
+                }
+            });
+
+            timelineCtx = document.getElementById('timelineChart').getContext('2d');
+            timelineChartInstance = new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: ['16:00', '16:10', '16:20', '16:30', '16:40'],
+                    datasets: [{
+                        label: 'Incidents Feed',
+                        data: [5, 12, 8, 15, 10],
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            populateAlerts();
+            populateVulns();
+            updateThreatCounts();
+            simulateRealTimeFeed();
+
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            updateChartThemes(savedTheme);
+
+            if (isLoggedIn) {
+                showDashboard();
+            } else {
+                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+            }
+        }
+
+        function login() {
+            const username = document.querySelector('.demo-username').value;
+            const password = document.querySelector('.demo-password').value;
+            if (username === 'admin' && password === 'password') {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                showDashboard();
+            } else {
+                alert('Invalid credentials. Use admin/password');
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'inline';
+            document.getElementById('logoutBtn').style.display = 'inline';
+            
+            const loginModalEl = document.getElementById('loginModal');
+            let modalInstance = bootstrap.Modal.getInstance(loginModalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+            
+            document.querySelector('.demo-username').value = '';
+            document.querySelector('.demo-password').value = '';
+
+            const loginModalEl = document.getElementById('loginModal');
+            let modalInstance = bootstrap.Modal.getInstance(loginModalEl);
+            if (!modalInstance) {
+                modalInstance = new bootstrap.Modal(loginModalEl);
+            }
+            modalInstance.show();
+        }
+
+        function populateAlerts() {
+            const tbody = document.querySelector('#alertsTable tbody');
+            tbody.innerHTML = mockAlerts.map(alert => `
+                <tr>
+                    <td>${escapeHtml(alert.timestamp)}</td>
+                    <td><span class="badge bg-${getBootstrapClass(alert.severity)}">${escapeHtml(alert.severity)}</span></td>
+                    <td>${escapeHtml(alert.source)}</td>
+                    <td>${escapeHtml(alert.threat)}</td>
+                    <td><span class="badge bg-${getBootstrapClass(alert.status)}">${escapeHtml(alert.status)}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function populateVulns() {
+            document.getElementById('vulnList').innerHTML = mockVulns.map(v => `
+                <div class="alert alert-${getBootstrapClass(v.severity)} alert-dismissible fade show" role="alert">
+                    <strong>${escapeHtml(v.id)}</strong>: ${escapeHtml(v.description)}<br>
+                    <small>Affected: ${escapeHtml(v.affected)}</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `).join('');
+        }
+
+        function updateThreatCounts() {
+            const high = Math.floor(Math.random() * 20) + 10;
+            const medium = Math.floor(Math.random() * 50) + 30;
+            const low = Math.floor(Math.random() * 150) + 100;
+            const resolvedCount = Math.floor(Math.random() * 100) + 70;
+
+            document.getElementById('highThreats').textContent = high;
+            document.getElementById('mediumThreats').textContent = medium;
+            document.getElementById('lowThreats').textContent = low;
+            document.getElementById('resolved').textContent = resolvedCount;
+
+            // Dynamically synchronize the Radar Chart variables
+            if (radarChartInstance) {
+                radarChartInstance.data.datasets[0].data = [
+                    high * 3.5 > 100 ? 99 : high * 3.5, 
+                    medium * 1.6 > 100 ? 95 : medium * 1.6, 
+                    low * 0.5 > 100 ? 90 : low * 0.5, 
+                    resolvedCount * 0.8 > 100 ? 88 : resolvedCount * 0.8, 
+                    60 + Math.floor(Math.random() * 20)
+                ];
+                radarChartInstance.update();
+            }
+
+            // Dynamically synchronize the Timeline Chart indices
+            if (timelineChartInstance) {
+                const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                timelineChartInstance.data.labels.push(nowStr);
+                timelineChartInstance.data.datasets[0].data.push(high);
+                
+                // Sliding window limits data-bloat on charts
+                if (timelineChartInstance.data.labels.length > 8) {
+                    timelineChartInstance.data.labels.shift();
+                    timelineChartInstance.data.datasets[0].data.shift();
+                }
+                timelineChartInstance.update();
+            }
+        }
+
+        function simulateRealTimeFeed() {
+            const feedEl = document.getElementById('threatFeed');
+            const threats = mockThreats[Math.floor(Math.random() * mockThreats.length)];
+            const time = new Date().toLocaleTimeString();
+            
+            // Create a clean DOM node to prevent injection vectors and DOM memory leak
+            const containerDiv = document.createElement('div');
+            containerDiv.className = 'alert alert-danger d-flex justify-content-between align-items-center mb-2';
+            containerDiv.innerHTML = `
+                <div><strong>New Threat:</strong> <span class="threat-name"></span></div>
+                <small>${escapeHtml(time)}</small>
+            `;
+            // Securely set the threat string as textContent (eliminates Self-XSS)
+            containerDiv.querySelector('.threat-name').textContent = threats;
+
+            feedEl.insertBefore(containerDiv, feedEl.firstChild);
+            document.getElementById('feedTime').textContent = time;
+
+            // Prevent DOM Bloat: limit to last 8 items to prevent heavy memory leaks
+            while (feedEl.children.length > 8) {
+                feedEl.removeChild(feedEl.lastChild);
+            }
+
+            setTimeout(simulateRealTimeFeed, 5000 + Math.random() * 10000);
+        }
+
+        function filterAlerts() {
+            const filter = document.getElementById('severityFilter').value.toLowerCase();
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#alertsTable tbody tr');
+            rows.forEach(row => {
+                const severity = row.cells[1].textContent.toLowerCase();
+                const threat = row.cells[3].textContent.toLowerCase();
+                const source = row.cells[2].textContent.toLowerCase();
+                if ((filter === '' || severity.includes(filter)) &&
+                    (threat.includes(search) || source.includes(search))) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function updateChartThemes(theme) {
+            const config = chartThemeConfig[theme] || chartThemeConfig.light;
+            
+            if (radarChartInstance) {
+                radarChartInstance.options.scales.r.grid.color = config.gridColor;
+                radarChartInstance.options.scales.r.angleLines.color = config.angleLinesColor;
+                radarChartInstance.options.scales.r.pointLabels.color = config.textColor;
+                radarChartInstance.options.scales.r.ticks.color = config.textColor;
+                radarChartInstance.update();
+            }
+
+            if (timelineChartInstance) {
+                timelineChartInstance.options.scales.x.grid.color = config.gridColor;
+                timelineChartInstance.options.scales.x.ticks.color = config.textColor;
+                
+                timelineChartInstance.options.scales.y.grid.color = config.gridColor;
+                timelineChartInstance.options.scales.y.ticks.color = config.textColor;
+                timelineChartInstance.update();
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.classList.remove('bi-sun');
+                icon.classList.add('bi-moon-stars-fill');
+                localStorage.setItem('theme', 'light');
+                updateChartThemes('light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.classList.remove('bi-moon-stars-fill');
+                icon.classList.add('bi-sun');
+                localStorage.setItem('theme', 'dark');
+                updateChartThemes('dark');
+            }
+        }
+
+        // Load theme configuration
+        window.addEventListener('load', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('themeIcon').classList.remove('bi-moon-stars-fill');
+                document.getElementById('themeIcon').classList.add('bi-sun');
+            }
+            init();
+            
+            // Auto update counts every 10s
+            setInterval(updateThreatCounts, 10000);
+        });
+    </script>
+</body>
+</html>
