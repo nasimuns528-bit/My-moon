@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ Pro Email Phishing Detector</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (via CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b0c10 0%, #1f2833 100%);
+            --glass-bg: rgba(31, 40, 51, 0.6);
+            --glass-border: rgba(102, 252, 241, 0.2);
+            --neon-blue: #66fcf1;
+            --neon-green: #45f3ff;
+            --neon-red: #ff4a5a;
+            --neon-yellow: #ffc107;
+            --text-primary: #c5c6c7;
+            --text-bright: #ffffff;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: var(--text-bright);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(11, 12, 16, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-bright);
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-scan {
+            background: var(--neon-blue);
+            color: #0b0c10;
+        }
+
+        .btn-scan:hover {
+            background: #45f3ff;
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.4);
+        }
+
+        .btn-clear {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-bright);
+        }
+
+        #results {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .score-card {
+            background: rgba(11, 12, 16, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score-value {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+
+        .score-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.7;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            background: rgba(11, 12, 16, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-pass { color: #00e676; }
+        .status-fail { color: var(--neon-red); }
+        .status-warn { color: var(--neon-yellow); }
+        .status-unknown { color: var(--text-primary); opacity: 0.5; }
+
+        .finding-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0 0 0;
+        }
+
+        .finding-list li {
+            background: rgba(255, 74, 90, 0.1);
+            border-left: 3px solid var(--neon-red);
+            padding: 10px 15px;
+            border-radius: 0 5px 5px 0;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .finding-list li.warn {
+            background: rgba(255, 193, 7, 0.1);
+            border-left-color: var(--neon-yellow);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🛡️ Pro Email Phishing Detector</h1>
+        
+        <div class="input-group">
+            <textarea id="emailInput" placeholder="Paste full email (including headers if available) here..."></textarea>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-scan" onclick="analyzeEmail()">
+                <i data-lucide="shield-search"></i> Advanced Scan
+            </button>
+            <button class="btn-clear" onclick="clearAll()">
+                <i data-lucide="trash-2"></i> Clear
+            </button>
+        </div>
+
+        <div id="results">
+            <div class="score-card">
+                <div class="score-label">Phishing Risk Score</div>
+                <div class="score-value" id="scoreValue">0</div>
+                <div class="score-label" id="riskLevel">Safe</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-title">SPF Status</span>
+                    <span class="detail-value" id="spfStatus"><i data-lucide="help-circle"></i> Unknown</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-title">DKIM Status</span>
+                    <span class="detail-value" id="dkimStatus"><i data-lucide="help-circle"></i> Unknown</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-title">DMARC Status</span>
+                    <span class="detail-value" id="dmarcStatus"><i data-lucide="help-circle"></i> Unknown</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-title">Homoglyphs</span>
+                    <span class="detail-value" id="homoglyphStatus"><i data-lucide="shield"></i> None Detected</span>
+                </div>
+            </div>
+
+            <ul class="finding-list" id="findingsList">
+                <!-- Findings will be injected here -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        const KEYWORDS = {
+            urgency: ['urgent', 'immediate', 'action required', 'account suspended', 'verify now', 'expire', 'limited time', 'final notice', 'overdue'],
+            credentials: ['password reset', 'login here', 'verify account', 'security update', 'unlock account', 'unusual activity'],
+            financial: ['bank transfer', 'wire', 'invoice', 'payment required', 'refund', 'receipt', 'purchase', 'tax', 'payroll'],
+            generic: ['dear customer', 'dear member', 'valued client', 'dear user']
+        };
+
+        function analyzeEmail() {
+            const input = document.getElementById('emailInput').value;
+            if (!input.trim()) return;
+
+            const inputLower = input.toLowerCase();
+            let score = 0;
+            const findings = [];
+
+            // 1. Header Analysis
+            const headers = parseHeaders(input);
+            updateStatus('spfStatus', headers.spf);
+            updateStatus('dkimStatus', headers.dkim);
+            updateStatus('dmarcStatus', headers.dmarc);
+
+            if (headers.spf === 'fail') { score += 30; findings.push({ text: 'SPF Verification Failed (Possible Spoofing)', severity: 'high' }); }
+            if (headers.dkim === 'fail') { score += 30; findings.push({ text: 'DKIM Signature Verification Failed', severity: 'high' }); }
+            if (headers.dmarc === 'fail') { score += 40; findings.push({ text: 'DMARC Policy Violation Detected', severity: 'high' }); }
+
+            // 2. Homoglyph Detection
+            const urls = input.match(/http[s]?:\/\/[^\s<>"']+/gi) || [];
+            const homoglyphs = checkHomoglyphs(urls);
+            if (homoglyphs.length > 0) {
+                score += 40;
+                document.getElementById('homoglyphStatus').innerHTML = `<i data-lucide="alert-triangle" class="status-fail"></i> Detected`;
+                homoglyphs.forEach(h => findings.push({ text: h, severity: 'high' }));
+            } else {
+                document.getElementById('homoglyphStatus').innerHTML = `<i data-lucide="check-circle" class="status-pass"></i> None`;
+            }
+
+            // 3. Keyword Analysis
+            let keywordCount = 0;
+            Object.keys(KEYWORDS).forEach(cat => {
+                KEYWORDS[cat].forEach(word => {
+                    if (inputLower.includes(word)) {
+                        keywordCount++;
+                        score += 5;
+                    }
+                });
+            });
+
+            if (keywordCount > 0) {
+                findings.push({ text: `Found ${keywordCount} suspicious keyword(s).`, severity: 'warn' });
+            }
+
+            // Cap score at 100
+            score = Math.min(score, 100);
+
+            // Display Results
+            displayResults(score, findings);
+            lucide.createIcons(); // Re-initialize icons for new content
+        }
+
+        function parseHeaders(input) {
+            const results = { spf: 'unknown', dkim: 'unknown', dmarc: 'unknown' };
+            
+            // Basic extraction of Authentication-Results
+            const authMatch = input.match(/Authentication-Results:.*?([\s\S]*?)(?:\r?\n\r?\n|\r?\n[^\s])/i);
+            if (authMatch) {
+                const authContent = authMatch[1].toLowerCase();
+                if (authContent.includes('spf=pass')) results.spf = 'pass';
+                else if (authContent.includes('spf=fail') || authContent.includes('spf=softfail')) results.spf = 'fail';
+                
+                if (authContent.includes('dkim=pass')) results.dkim = 'pass';
+                else if (authContent.includes('dkim=fail')) results.dkim = 'fail';
+                
+                if (authContent.includes('dmarc=pass')) results.dmarc = 'pass';
+                else if (authContent.includes('dmarc=fail')) results.dmarc = 'fail';
+            }
+            return results;
+        }
+
+        function checkHomoglyphs(urls) {
+            const findings = [];
+            urls.forEach(url => {
+                try {
+                    const hostname = new URL(url).hostname;
+                    // Check for non-ASCII characters
+                    if (/[^\x00-\x7F]/.test(hostname)) {
+                        findings.push(`Potential Homoglyph in URL: ${hostname}`);
+                    }
+                } catch (e) {}
+            });
+            return findings;
+        }
+
+        function updateStatus(elementId, status) {
+            const el = document.getElementById(elementId);
+            if (status === 'pass') {
+                el.innerHTML = `<i data-lucide="check-circle" class="status-pass"></i> Pass`;
+            } else if (status === 'fail') {
+                el.innerHTML = `<i data-lucide="x-circle" class="status-fail"></i> Fail`;
+            } else {
+                el.innerHTML = `<i data-lucide="help-circle" class="status-unknown"></i> Unknown`;
+            }
+        }
+
+        function displayResults(score, findings) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+
+            const scoreValueEl = document.getElementById('scoreValue');
+            const progressFill = document.getElementById('progressFill');
+            const riskLevel = document.getElementById('riskLevel');
+            const findingsList = document.getElementById('findingsList');
+
+            scoreValueEl.innerText = score;
+            progressFill.style.width = `${score}%`;
+
+            if (score > 70) {
+                scoreValueEl.style.color = 'var(--neon-red)';
+                progressFill.style.backgroundColor = 'var(--neon-red)';
+                riskLevel.innerText = 'DANGEROUS - High Risk';
+                riskLevel.style.color = 'var(--neon-red)';
+            } else if (score > 30) {
+                scoreValueEl.style.color = 'var(--neon-yellow)';
+                progressFill.style.backgroundColor = 'var(--neon-yellow)';
+                riskLevel.innerText = 'SUSPICIOUS - Medium Risk';
+                riskLevel.style.color = 'var(--neon-yellow)';
+            } else {
+                scoreValueEl.style.color = '#00e676';
+                progressFill.style.backgroundColor = '#00e676';
+                riskLevel.innerText = 'SAFE - Low Risk';
+                riskLevel.style.color = '#00e676';
+            }
+
+            findingsList.innerHTML = '';
+            findings.forEach(f => {
+                const li = document.createElement('li');
+                if (f.severity === 'warn') li.classList.add('warn');
+                
+                const emoji = f.severity === 'high' ? '🛑' : '⚠️';
+                const icon = f.severity === 'high' ? 'alert-octagon' : 'alert-triangle';
+                li.innerHTML = `${emoji} <i data-lucide="${icon}"></i> ${f.text}`;
+                findingsList.appendChild(li);
+            });
+        }
+
+        function clearAll() {
+            document.getElementById('emailInput').value = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('scoreValue').innerText = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('riskLevel').innerText = 'Safe';
+            document.getElementById('findingsList').innerHTML = '';
+            updateStatus('spfStatus', 'unknown');
+            updateStatus('dkimStatus', 'unknown');
+            updateStatus('dmarcStatus', 'unknown');
+            document.getElementById('homoglyphStatus').innerHTML = `<i data-lucide="shield"></i> None Detected`;
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
