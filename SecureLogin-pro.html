@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Login Demo – Black & Gold</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --accent: #facc15;
+      --accent-strong: #fbbf24;
+      --accent-soft: rgba(250, 204, 21, 0.18);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #fb7185;
+      --warning: #f97316;
+      --safe: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      /* Premium Obsidian Gold Mesh Gradient */
+      background:
+        radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(250, 204, 21, 0.12) 0%, transparent 50%),
+        linear-gradient(135deg, #020617 0%, #0b0f19 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: min(960px, 100%);
+    }
+
+    .shell {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.45));
+      border-radius: 26px;
+      border: 1px solid rgba(250, 204, 21, 0.2);
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+    }
+
+    .accent-strip {
+      height: 3px;
+      background: linear-gradient(90deg, #facc15, #f97316, #facc15);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(2, 6, 23, 0.25);
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #facc15, #0f172a);
+      box-shadow: 0 18px 40px rgba(250, 204, 21, 0.7);
+      font-size: 1.3rem;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      letter-spacing: .08em;
+      font-size: .9rem;
+    }
+
+    .brand-sub {
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .header-text h1 {
+      font-size: 1.6rem;
+      margin-bottom: 2px;
+    }
+
+    .header-text p {
+      font-size: .84rem;
+      color: var(--muted);
+      max-width: 40ch;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(250, 204, 21, 0.14);
+      color: #fde68a;
+      font-size: .75rem;
+    }
+
+    .main {
+      padding: 14px 16px 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width:800px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.25);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 14px 16px 14px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .card p.small {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: .8rem;
+      margin-bottom: 4px;
+    }
+
+    .input-row {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      font-size: .86rem;
+      font-family: inherit;
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.96);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.7);
+    }
+
+    input::placeholder {
+      color: #6b7280;
+    }
+
+    input:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: transparent;
+      background: #020617;
+      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.6);
+    }
+
+    .toggle-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: .75rem;
+      cursor: pointer;
+    }
+
+    .meter-shell {
+      height: 7px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      overflow: hidden;
+      margin-top: 4px;
+      margin-bottom: 2px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--danger);
+      transition: width .25s ease, background-color .25s ease, box-shadow .25s ease;
+    }
+
+    .meta-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: .75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .status-label {
+      font-weight: 600;
+    }
+
+    .hint-list {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 4px;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .hint-list li {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .8rem;
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+
+    .checkbox-row input {
+      width: auto;
+      box-shadow: none;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #facc15, #f97316);
+      color: #020617;
+      box-shadow:
+        0 18px 40px rgba(250, 204, 21, 0.7),
+        0 0 0 1px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(18px);
+      margin-top: 6px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 22px 50px rgba(250, 204, 21, 0.85),
+        0 0 0 2px rgba(250, 204, 21, 0.4);
+      filter: brightness(1.1);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    input {
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background-color: #020617;
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.25);
+    }
+
+    body {
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Glowing animated background spheres */
+    .glowing-sphere {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: -1;
+      opacity: 0.35;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      animation: drift 25s infinite alternate ease-in-out;
+    }
+
+    .sphere-1 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+      top: 15%;
+      left: 10%;
+    }
+
+    .sphere-2 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, #f97316 0%, transparent 70%);
+      bottom: 10%;
+      right: 15%;
+      animation-delay: -12s;
+    }
+
+    @keyframes drift {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      50% {
+        transform: translate(60px, 40px) scale(1.1);
+      }
+
+      100% {
+        transform: translate(-30px, -20px) scale(0.95);
+      }
+    }
+
+    /* State transitions */
+    .auth-wrapper {
+      position: relative;
+    }
+
+    .fade-out-zoom {
+      opacity: 0 !important;
+      transform: scale(0.95) translateY(10px) !important;
+      pointer-events: none;
+    }
+
+    .fade-in-slide {
+      animation: slideIn 0.5s forwards cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.98) translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .shadow-block {
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.04), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: .78rem;
+      margin-top: 4px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.85);
+    }
+
+    .text-muted {
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .status-good {
+      color: var(--safe);
+    }
+
+    .status-warn {
+      color: var(--warning);
+    }
+
+    .status-bad {
+      color: var(--danger);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Ambient background glow fields -->
+  <div class="glowing-sphere sphere-1"></div>
+  <div class="glowing-sphere sphere-2"></div>
+
+  <div class="app">
+    <div class="shell">
+      <div class="accent-strip"></div>
+
+      <header>
+        <div class="brand">
+          <div class="brand-icon">🔐</div>
+          <div>
+            <div class="brand-title">SECURE LOGIN DEMO</div>
+            <div class="brand-sub">Black & gold glassmorphism login</div>
+          </div>
+        </div>
+        <div class="header-text">
+          <h1>Practice safer login patterns.</h1>
+          <p>
+            Explore a login screen with password strength hints and an optional
+            2FA code step. This is a front‑end demo only, not a real auth system.
+          </p>
+        </div>
+        <div>
+          <div class="badge">
+            <span>✨</span>
+            <span>Runs locally · UI only</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="main">
+        <div class="grid-2">
+          <!-- Left: auth wrapper -->
+          <div class="auth-wrapper">
+            <!-- Login form Card -->
+            <section class="card" id="loginCard" aria-label="Login form">
+              <h2>👤 Login</h2>
+              <p class="small">
+                Use a fake email and password for testing. The form does not send
+                data to a server. It only shows how a more secure login flow <em>could</em> look.
+              </p>
+
+              <form id="loginForm">
+                <div class="field-group">
+                  <label for="email">Email</label>
+                  <div class="input-row">
+                    <input type="email" id="email" placeholder="you@example.com" autocomplete="off" required />
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label for="password">Password</label>
+                  <div class="input-row">
+                    <input type="password" id="password" placeholder="Use a long, unique passphrase" autocomplete="off"
+                      required />
+                    <button type="button" class="toggle-btn" id="togglePwd">
+                      👁️ Show
+                    </button>
+                  </div>
+
+                  <div class="meter-shell" aria-hidden="true">
+                    <div class="meter-fill" id="meter"></div>
+                  </div>
+                  <div class="meta-line">
+                    <span id="strengthLabel" class="status-label status-bad">
+                      Strength: Weak
+                    </span>
+                    <span id="lengthInfo">0 characters</span>
+                  </div>
+                  <ul class="hint-list" id="passwordHints">
+                    <li>
+                      <span>💡</span>
+                      <span>Start typing to see how to make your password stronger.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="checkbox-row">
+                  <input type="checkbox" id="twofaToggle" />
+                  <label for="twofaToggle">Enable 2FA code step (demo)</label>
+                </div>
+
+                <div class="field-group" id="twofaGroup" style="display:none;">
+                  <label for="code">2FA code</label>
+                  <div class="input-row">
+                    <input type="text" id="code" maxlength="6" pattern="\d{6}" inputmode="numeric" placeholder="123456"
+                      autocomplete="off" />
+                  </div>
+                  <p class="text-muted">
+                    In real apps, you would get this code from an authenticator app
+                    or SMS, and it would be verified on the server [demo only].
+                  </p>
+                </div>
+
+                <button type="submit" class="btn" id="loginBtn">
+                  🔓 Simulate login
+                </button>
+              </form>
+
+              <div id="loginStatus" class="pill" style="margin-top:8px; display:none;">
+                <span id="loginEmoji">🛈</span>
+                <span id="loginMessage">Status message here.</span>
+              </div>
+
+              <p class="text-muted" style="margin-top:8px;">
+                Real secure login also requires HTTPS, strong password hashing, rate
+                limiting, and properly implemented MFA on the backend [web:197][web:198][web:200][web:204].
+              </p>
+            </section>
+
+            <!-- Success Dashboard Card (Hidden by default) -->
+            <section class="card" id="dashboardCard" aria-label="Simulated Dashboard"
+              style="display:none; min-height: 440px;">
+              <h2>🛡️ Secured Session Active</h2>
+              <p class="small">
+                You have authenticated successfully. A simulated encrypted session is now established in memory.
+              </p>
+
+              <div class="session-info shadow-block" style="margin-top: 14px; padding: 12px 14px; font-size: 0.8rem;">
+                <div class="meta-line" style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+                  <span>Authenticated Email:</span>
+                  <strong id="sessionEmail" style="color:var(--accent);">user@example.com</strong>
+                </div>
+                <div class="meta-line" style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+                  <span>Session Security:</span>
+                  <strong style="color:var(--safe);">High (AES-256 Mock)</strong>
+                </div>
+                <div class="meta-line" style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+                  <span>Login Epoch:</span>
+                  <span id="sessionTime" class="text-muted">Just now</span>
+                </div>
+                <div class="meta-line" style="display: flex; justify-content: space-between;">
+                  <span>Simulated IP:</span>
+                  <span class="text-muted">192.168.1.42</span>
+                </div>
+              </div>
+
+              <div class="shadow-block" style="margin-top: 12px; padding: 12px 14px;">
+                <p class="small" style="font-weight: 600; margin-bottom: 6px;">🔐 Security Keys in Memory</p>
+                <div style="font-family: monospace; font-size: 0.72rem; word-break: break-all; color: var(--muted);">
+                  SESSION_KEY: <span style="color: var(--accent);">mock_pk_9f3a9e88d220a2e3ab47bc638d9e2a...</span>
+                </div>
+              </div>
+
+              <button type="button" class="btn" id="logoutBtn" style="width: 100%; margin-top: 14px;">
+                🔒 Lock Session & Exit
+              </button>
+            </section>
+          </div> <!-- Close auth-wrapper -->
+
+          <!-- Right: explanations -->
+          <section class="card" aria-label="Tips">
+            <h2>🧠 Why this is more secure (in theory)</h2>
+            <p class="small">
+              This side explains what a safer login experience usually includes.
+              It does not actually enforce real security, but it mirrors best practices.
+            </p>
+
+            <ul class="hint-list" style="margin-top:6px;">
+              <li>
+                <span>✅</span>
+                <span>
+                  <strong>Strong password guidance:</strong> Encourage long,
+                  unique passwords instead of forcing frequent resets [web:198][web:199].
+                </span>
+              </li>
+              <li>
+                <span>🛡️</span>
+                <span>
+                  <strong>2FA/MFA step:</strong> Adding a second factor (code from
+                  phone or app) greatly increases account protection [web:200][web:201][web:204].
+                </span>
+              </li>
+              <li>
+                <span>🚫</span>
+                <span>
+                  <strong>No real password storage here:</strong> Real systems must
+                  hash and salt passwords on the server, never keep them in plain text [web:197][web:198].
+                </span>
+              </li>
+              <li>
+                <span>🌐</span>
+                <span>
+                  <strong>HTTPS required:</strong> Production logins must be served
+                  over HTTPS so credentials are encrypted in transit [web:197][web:204].
+                </span>
+              </li>
+            </ul>
+
+            <p class="text-muted" style="margin-top:10px;">
+              Use this page in your portfolio to explain how you think about
+              authentication UX and security: good passwords, 2FA, and clear feedback
+              about what is happening during login [web:197][web:200][web:203].
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const passwordInput = document.getElementById("password");
+    const togglePwdBtn = document.getElementById("togglePwd");
+    const meterFill = document.getElementById("meter");
+    const strengthLabel = document.getElementById("strengthLabel");
+    const lengthInfo = document.getElementById("lengthInfo");
+    const passwordHints = document.getElementById("passwordHints");
+
+    const twofaToggle = document.getElementById("twofaToggle");
+    const twofaGroup = document.getElementById("twofaGroup");
+    const codeInput = document.getElementById("code");
+
+    const loginBtn = document.getElementById("loginBtn");
+    const loginStatus = document.getElementById("loginStatus");
+    const loginEmoji = document.getElementById("loginEmoji");
+    const loginMessage = document.getElementById("loginMessage");
+
+    // Rate Limiting Cooldown State
+    let loginAttempts = 0;
+    let isLockedOut = false;
+    let lockoutTimer = null;
+
+    togglePwdBtn.addEventListener("click", () => {
+      const type = passwordInput.type === "password" ? "text" : "password";
+      passwordInput.type = type;
+      togglePwdBtn.textContent = type === "password" ? "👁️ Show" : "🙈 Hide";
+    });
+
+    passwordInput.addEventListener("input", () => {
+      const value = passwordInput.value || "";
+      const result = evaluatePassword(value);
+      updateStrengthUI(result);
+    });
+
+    twofaToggle.addEventListener("change", () => {
+      const enabled = twofaToggle.checked;
+      twofaGroup.style.display = enabled ? "block" : "none";
+      if (!enabled) {
+        codeInput.value = "";
+      }
+    });
+
+    // Handle Form Submit (Allows pressing Enter on any field)
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (isLockedOut) return;
+
+      const email = (document.getElementById("email").value || "").trim();
+      const pwd = (passwordInput.value || "").trim();
+      const needs2fa = twofaToggle.checked;
+      const code = (codeInput.value || "").trim();
+
+      if (!email || !pwd) {
+        showLoginStatus("❗", "Please fill both email and password.", "status-bad");
+        registerFailedAttempt();
+        return;
+      }
+
+      // Semantic email structure validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showLoginStatus("❗", "Please enter a valid email address.", "status-bad");
+        registerFailedAttempt();
+        return;
+      }
+
+      // 2FA strict numeric format check
+      if (needs2fa) {
+        if (!/^\d{6}$/.test(code)) {
+          showLoginStatus("🔢", "Please enter a valid 6‑digit numeric 2FA code.", "status-warn");
+          registerFailedAttempt();
+          return;
+        }
+      }
+
+      const strength = evaluatePassword(pwd);
+      if (strength.score < 3) {
+        showLoginStatus("⚠️", "Login simulated, but your password is too weak. Please use at least 8 characters and aim for complexity.", "status-warn");
+        registerFailedAttempt();
+      } else {
+        loginAttempts = 0; // reset attempts on success
+        showLoginStatus("✅", "Login simulated successfully with a reasonably strong password.", "status-good");
+
+        // Trigger dashboard entry transition
+        setTimeout(() => {
+          enterDashboard(email);
+        }, 800);
+      }
+    });
+
+    function enterDashboard(email) {
+      const loginCard = document.getElementById("loginCard");
+      const dashboardCard = document.getElementById("dashboardCard");
+
+      document.getElementById("sessionEmail").textContent = email;
+      document.getElementById("sessionTime").textContent = new Date().toLocaleTimeString();
+
+      loginCard.classList.add("fade-out-zoom");
+      setTimeout(() => {
+        loginCard.style.display = "none";
+        dashboardCard.style.display = "block";
+        dashboardCard.classList.add("fade-in-slide");
+      }, 500);
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      const loginCard = document.getElementById("loginCard");
+      const dashboardCard = document.getElementById("dashboardCard");
+
+      // Clear inputs
+      document.getElementById("email").value = "";
+      document.getElementById("password").value = "";
+      document.getElementById("code").value = "";
+      updateStrengthUI(evaluatePassword("")); // reset strength
+
+      loginStatus.style.display = "none";
+
+      dashboardCard.classList.remove("fade-in-slide");
+      dashboardCard.style.display = "none";
+
+      loginCard.style.display = "block";
+      loginCard.classList.remove("fade-out-zoom");
+      loginCard.classList.add("fade-in-slide");
+    });
+
+    function registerFailedAttempt() {
+      loginAttempts++;
+      if (loginAttempts >= 3) {
+        triggerLockout();
+      }
+    }
+
+    function triggerLockout() {
+      isLockedOut = true;
+      loginBtn.disabled = true;
+      let remaining = 15;
+
+      showLoginStatus("🔒", `Too many failed attempts. Locked out for ${remaining}s...`, "status-bad");
+
+      lockoutTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(lockoutTimer);
+          isLockedOut = false;
+          loginBtn.disabled = false;
+          loginAttempts = 0;
+          showLoginStatus("🛈", "Lockout ended. You can try simulating login again.", "status-good");
+        } else {
+          showLoginStatus("🔒", `Too many failed attempts. Locked out for ${remaining}s...`, "status-bad");
+        }
+      }, 1000);
+    }
+
+    // High fidelity Password Entropy & Rules evaluator
+    function evaluatePassword(password) {
+      if (!password) {
+        return { score: 0, label: "Weak", hints: ["Start typing to see strength hints."], length: 0 };
+      }
+
+      let score = 0;
+      const hints = [];
+      const len = password.length;
+
+      // 1. Length requirements (Absolute block under 8 characters)
+      if (len < 8) {
+        hints.push("Too short. Password must be at least 8 characters.");
+        return { score: 0, label: "Weak", hints, length: len };
+      }
+
+      if (len >= 16) {
+        score += 3;
+      } else if (len >= 12) {
+        score += 2;
+      } else {
+        score += 1;
+        hints.push("Aim for at least 12 characters to improve complexity.");
+      }
+
+      // 2. Character diversity check
+      const hasLower = /[a-z]/.test(password);
+      const hasUpper = /[A-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+      const typesCount = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+
+      if (typesCount >= 4) {
+        score += 2;
+      } else if (typesCount === 3) {
+        score += 1;
+      } else {
+        hints.push("Combine upper/lower case letters, numbers, and symbols.");
+      }
+
+      // 3. Repeating character sequence penalties
+      const repeatingRegex = /(.)\1{3,}/; // Matches 4 or more repeats (e.g. 'aaaa')
+      if (repeatingRegex.test(password)) {
+        score = Math.max(0, score - 2);
+        hints.push("Avoid long sequences of repeating characters.");
+      }
+
+      // 4. Common dictionary pattern penalties
+      if (/password|1234|qwer|letmein|admin|root|qwerty/i.test(password)) {
+        score = 0;
+        hints.push("Avoid extremely common patterns like 'password' or '1234'.");
+      }
+
+      let label = "Weak";
+      if (score >= 4) label = "Strong";
+      else if (score === 2 || score === 3) label = "Medium";
+
+      return { score, label, hints, length: len };
+    }
+
+    function updateStrengthUI(result) {
+      let width = 0;
+      let color = "var(--danger)";
+      let cls = "status-label status-bad";
+
+      if (result.score <= 1) {
+        width = 25;
+        color = "var(--danger)";
+        cls = "status-label status-bad";
+      } else if (result.score === 2 || result.score === 3) {
+        width = 60;
+        color = "var(--warning)";
+        cls = "status-label status-warn";
+      } else {
+        width = 100;
+        color = "var(--safe)";
+        cls = "status-label status-good";
+      }
+
+      meterFill.style.width = width + "%";
+      meterFill.style.backgroundColor = color;
+      meterFill.style.boxShadow = `0 0 16px ${color}55`;
+
+      strengthLabel.textContent = `Strength: ${result.label}`;
+      strengthLabel.className = cls;
+
+      lengthInfo.textContent = `${result.length} character${result.length === 1 ? "" : "s"}`;
+
+      passwordHints.innerHTML = "";
+      result.hints.forEach((text) => {
+        const li = document.createElement("li");
+        const icon = document.createElement("span");
+        icon.textContent = "💡";
+        const span = document.createElement("span");
+        span.textContent = text;
+        li.appendChild(icon);
+        li.appendChild(span);
+        passwordHints.appendChild(li);
+      });
+    }
+
+    function showLoginStatus(emoji, message, statusClass) {
+      loginEmoji.textContent = emoji;
+      loginMessage.textContent = message;
+      loginStatus.style.display = "inline-flex";
+      loginMessage.className = statusClass;
+    }
+  </script>
+</body>
+
+</html>
